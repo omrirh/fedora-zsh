@@ -1,5 +1,5 @@
 - name: zsh - Change shell
-  ansible.builtin.shell: sudo -k chsh -s /usr/bin/zsh {{ user }}
+  ansible.builtin.shell: sudo -k chsh -s /usr/bin/zsh {{ ansible_env.USER }}
 
 - name: Download oh-my-zsh install script locally
   ansible.builtin.shell: wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O zsh-install.sh
@@ -7,11 +7,11 @@
 - name: oh-my-zsh - copy install script
   ansible.builtin.copy:
     src: zsh-install.sh
-    dest: "{{ home }}/zsh-install.sh"
+    dest: "{{ ansible_env.HOME }}/zsh-install.sh"
 
 - name: oh-my-zsh - install
   ansible.builtin.expect:
-    command: sudo sh "{{ home }}"/zsh-install.sh
+    command: sudo sh "{{ ansible_env.HOME }}"/zsh-install.sh
     responses:
       "Do you want to change your default shell to zsh? [Y/n] ": "Y"
   register: command_result
@@ -26,12 +26,12 @@
 - name: oh-my-zsh - copy needed files to home directory
   ansible.builtin.copy:
     src: files/to-home-dir/
-    dest: "{{ home }}/"
+    dest: "{{ ansible_env.HOME }}/"
 
 - name: clone zsh plugins
   ansible.builtin.git:
     repo: "{{ item.repo}}"
-    dest: "{{ home }}/.oh-my-zsh/custom/plugins/{{ item.name }}"
+    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/{{ item.name }}"
   loop:
   - { repo: 'https://github.com/TamCore/autoupdate-oh-my-zsh-plugins', name: 'autoupdate' }
   - { repo: 'https://github.com/chrissicool/zsh-256color', name: 'zsh-256color' }
@@ -41,14 +41,14 @@
 - name: Download fonts for powerlevel10k
   ansible.builtin.copy:
     src: files/fonts/
-    dest: "{{ home }}/.local/share/fonts/"
+    dest: "{{ ansible_env.HOME }}/.local/share/fonts/"
   become: true
 
 - name: Apply fonts
-  ansible.builtin.shell: fc-cache -v
+  ansible.builtin.shell: sudo fc-cache -v
 
 - name: clone powerlevel10k zsh theme
   ansible.builtin.git:
     repo: https://github.com/romkatv/powerlevel10k.git
-    dest: "{{ home }}/.oh-my-zsh/custom/themes/powerlevel10k"
+    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k"
     depth: 1

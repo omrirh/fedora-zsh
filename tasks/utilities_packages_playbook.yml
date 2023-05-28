@@ -1,10 +1,11 @@
 - name: bash-insulter - just for fun
   ansible.builtin.get_url:
     url: https://raw.githubusercontent.com/hkbakke/bash-insulter/master/src/bash.command-not-found
-    dest: "{{ home }}/.local/bin/bash.command-not-found"
+    dest: "{{ ansible_env.HOME }}/.local/bin/bash.command-not-found"
     mode: "+x"
 
 - name: Install required dnf packages
+  become: true
   ansible.builtin.dnf:
     name:
       - zsh
@@ -29,8 +30,7 @@
       - ipython
       - pexpect
       - pre-commit
+      - black
+      - isort
   loop_control:
     loop_var: package_name
-
-- name: Update fonts
-  ansible.builtin.shell: sudo fc-cache -v
