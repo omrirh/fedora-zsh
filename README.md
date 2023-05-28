@@ -10,6 +10,8 @@ Via pip:
   - poetry
   - ipython
   - pre-commit
+  - black
+  - isort
 
 Via dnf:
   - oc
@@ -29,10 +31,10 @@ Via dnf:
 ## Installation
 Clone the repository:
 ```bash
-git clone https://github.com/omrirh/fedora-zsh.git
+git clone https://github.com/RedHatQE/fedora-zsh.git
 cd fedora-zsh
 ```
 Create Fedora zsh environment with Ansible
 ```bash
-ansible-playbook fedora-zsh.yml --extra-vars "home=<user home dir> user=<user name>"
+ansible-playbook -K fedora-zsh.yml
 ```
