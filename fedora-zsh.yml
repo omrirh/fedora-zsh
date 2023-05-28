@@ -1,0 +1,14 @@
+- name: Fedora zsh
+  hosts: localhost
+  connection: local
+  become: true
+
+  tasks:
+  - name: Update and install Fedora utilities packages
+    ansible.builtin.include_tasks: tasks/utilities_packages_playbook.yml
+
+  - name: Configure zsh
+    ansible.builtin.include_tasks: tasks/zsh_playbook.yml
+
+  - name: Install Openshift-related packages
+    ansible.builtin.include_tasks: tasks/openshift_packages_playbook.yml

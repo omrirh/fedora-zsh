@@ -1,0 +1,30 @@
+- name: Get kubectl latest version
+  ansible.builtin.shell: curl -L -s "https://dl.k8s.io/release/stable.txt"
+  register: kubectl_version_result
+
+- name: Download oc and kubectl
+  ansible.builtin.get_url:
+    url: "https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/latest/openshift-client-linux-4.13.0.tar.gz"
+    dest: "/tmp"
+
+- name: Extract oc and kubectl
+  ansible.builtin.unarchive:
+    src: /tmp/openshift-client-linux-4.13.0.tar.gz
+    dest: "{{ home }}/.local/bin/"
+
+- name: Download kubectl
+  ansible.builtin.get_url:
+    url: "https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/latest/openshift-client-linux-4.13.0.tar.gz"
+    dest: "{{ home }}/.local/bin/kubectl"
+    mode: '+x'
+
+- name: rosa - download latest
+  ansible.builtin.shell: curl https://mirror.openshift.com/pub/openshift-v4/clients/rosa/latest/rosa-linux.tar.gz -o /tmp/rosa.tar.gz && \
+                          tar -xvf /tmp/rosa.tar.gz --directory={{ home }}/.local/bin/ --no-same-owner && \
+                          chmod +x {{ home }}/.local/bin/rosa && \
+                          rm -rf /tmp/oc.tar.gz
+
+- name: ocm - download latest
+  ansible.builtin.shell: curl -Lo {{ home }}/.local/bin/ocm https://github.com/openshift-online/ocm-cli/releases/download/v0.1.66/ocm-linux-amd64 && \
+                          chmod +x {{ home }}/.local/bin/ocm
+

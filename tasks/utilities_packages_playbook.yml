@@ -1,0 +1,36 @@
+- name: bash-insulter - just for fun
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/hkbakke/bash-insulter/master/src/bash.command-not-found
+    dest: "{{ home }}/.local/bin/bash.command-not-found"
+    mode: "+x"
+
+- name: Install required dnf packages
+  ansible.builtin.dnf:
+    name:
+      - zsh
+      - vim
+      - awscli
+      - git-all
+      - fontconfig
+      - python3-pip
+      - util-linux-user
+    state: present
+  loop_control:
+    loop_var: package_name
+
+- name: Install required pip packages
+  ansible.builtin.pip:
+    name:
+      - tox
+      - ipdb
+      - docker
+      - pipenv
+      - poetry
+      - ipython
+      - pexpect
+      - pre-commit
+  loop_control:
+    loop_var: package_name
+
+- name: Update fonts
+  ansible.builtin.shell: sudo fc-cache -v
