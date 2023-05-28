@@ -1,5 +1,5 @@
-## Fedora ZSH
-### Setup a local environment with zsh, openshift tools and other swagger plugins.
+## fedora zsh
+### Setup a local environment with zsh, openshift tools and other cool plugins.
 
 ## Image includes:
 Via pip: 
@@ -27,12 +27,10 @@ Via dnf:
 [ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html): install using package manager
 
 ## Installation
-Clone the repository and install Ansible:
+Clone the repository:
 ```bash
 git clone https://github.com/omrirh/fedora-zsh.git
 cd fedora-zsh
-sudo dnf update
-sudo dnf install ansible
 ```
 Create Fedora zsh environment with Ansible
 ```bash
