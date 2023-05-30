@@ -2,7 +2,7 @@
 ### Setup a local environment with zsh, openshift tools and other cool plugins.
 
 ## Image includes:
-Via pip: 
+Via pip:
   - tox
   - ipdb
   - docker

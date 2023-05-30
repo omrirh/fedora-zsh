@@ -1,4 +1,4 @@
-- name: bash-insulter - just for fun
+- name: Bash-insulter - just for fun
   ansible.builtin.get_url:
     url: https://raw.githubusercontent.com/hkbakke/bash-insulter/master/src/bash.command-not-found
     dest: "{{ ansible_env.HOME }}/.local/bin/bash.command-not-found"
