@@ -18,13 +18,12 @@
     dest: "{{ ansible_env.HOME }}/.local/bin/kubectl"
     mode: '+x'
 
-- name: rosa - download latest
+- name: Rosa - download latest
   ansible.builtin.shell: curl https://mirror.openshift.com/pub/openshift-v4/clients/rosa/latest/rosa-linux.tar.gz -o /tmp/rosa.tar.gz && \
                           tar -xvf /tmp/rosa.tar.gz --directory={{ ansible_env.HOME }}/.local/bin/ --no-same-owner && \
                           chmod +x {{ ansible_env.HOME }}/.local/bin/rosa && \
                           rm -rf /tmp/oc.tar.gz
 
-- name: ocm - download latest
+- name: Ocm - download latest
   ansible.builtin.shell: curl -Lo {{ ansible_env.HOME }}/.local/bin/ocm https://github.com/openshift-online/ocm-cli/releases/download/v0.1.66/ocm-linux-amd64 && \
                           chmod +x {{ ansible_env.HOME }}/.local/bin/ocm
-

@@ -1,15 +1,15 @@
-- name: zsh - Change shell
+- name: Zsh - Change shell
   ansible.builtin.shell: sudo -k chsh -s /usr/bin/zsh {{ ansible_env.USER }}
 
 - name: Download oh-my-zsh install script locally
   ansible.builtin.shell: wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O zsh-install.sh
 
-- name: oh-my-zsh - copy install script
+- name: Oh-my-zsh - copy install script
   ansible.builtin.copy:
     src: zsh-install.sh
     dest: "{{ ansible_env.HOME }}/zsh-install.sh"
 
-- name: oh-my-zsh - install
+- name: Oh-my-zsh - install
   ansible.builtin.expect:
     command: sudo sh "{{ ansible_env.HOME }}"/zsh-install.sh
     responses:
@@ -18,25 +18,25 @@
   # DO not fail if oh-my-zsh is installed
   failed_when: "not command_result.stdout"
 
-- name: oh-my-zsh - remove install script
+- name: Oh-my-zsh - remove install script
   ansible.builtin.file:
     path: zsh-install.sh
     state: absent
 
-- name: oh-my-zsh - copy needed files to home directory
+- name: Oh-my-zsh - copy needed files to home directory
   ansible.builtin.copy:
     src: files/to-home-dir/
     dest: "{{ ansible_env.HOME }}/"
 
-- name: clone zsh plugins
+- name: Clone zsh plugins
   ansible.builtin.git:
-    repo: "{{ item.repo}}"
+    repo: "{{ item.repo }}"
     dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/{{ item.name }}"
   loop:
-  - { repo: 'https://github.com/TamCore/autoupdate-oh-my-zsh-plugins', name: 'autoupdate' }
-  - { repo: 'https://github.com/chrissicool/zsh-256color', name: 'zsh-256color' }
-  - { repo: 'https://github.com/zsh-users/zsh-autosuggestions', name: 'zsh-autosuggestions' }
-  - { repo: 'https://github.com/zsh-users/zsh-syntax-highlighting.git', name: 'zsh-syntax-highlighting' }
+    - { repo: 'https://github.com/TamCore/autoupdate-oh-my-zsh-plugins', name: 'autoupdate' }
+    - { repo: 'https://github.com/chrissicool/zsh-256color', name: 'zsh-256color' }
+    - { repo: 'https://github.com/zsh-users/zsh-autosuggestions', name: 'zsh-autosuggestions' }
+    - { repo: 'https://github.com/zsh-users/zsh-syntax-highlighting.git', name: 'zsh-syntax-highlighting' }
 
 - name: Download fonts for powerlevel10k
   ansible.builtin.copy:
@@ -47,7 +47,7 @@
 - name: Apply fonts
   ansible.builtin.shell: sudo fc-cache -v
 
-- name: clone powerlevel10k zsh theme
+- name: Clone powerlevel10k zsh theme
   ansible.builtin.git:
     repo: https://github.com/romkatv/powerlevel10k.git
     dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/themes/powerlevel10k"
