@@ -1,23 +1,34 @@
-- name: Bash-insulter - just for fun
+- name: Download Homebrew install script
   ansible.builtin.get_url:
-    url: https://raw.githubusercontent.com/hkbakke/bash-insulter/master/src/bash.command-not-found
-    dest: "{{ ansible_env.HOME }}/.local/bin/bash.command-not-found"
+    url: https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+    dest: /tmp/install_homebrew.sh
     mode: "+x"
 
-- name: Install required dnf packages
-  become: true
-  ansible.builtin.dnf:
-    name:
-      - zsh
-      - vim
-      - awscli
-      - git-all
-      - fontconfig
-      - python3-pip
-      - util-linux-user
+- name: Install Homebrew (if not already installed)
+  ansible.builtin.command: /tmp/install_homebrew.sh
+  args:
+    creates: /usr/local/bin/brew
+  become: false
+
+- name: Ensure brew is in the PATH for the current user
+  ansible.builtin.shell: 'echo "eval $(/usr/local/bin/brew shellenv)" >> {{ ansible_env.HOME }}/.bash_profile'
+  args:
+    executable: /bin/bash
+
+- name: Install required brew packages
+  community.general.homebrew:
+    name: "{{ item }}"
     state: present
+  loop:
+    - zsh
+    - vim
+    - awscli
+    - git
+    - fontconfig
+    - python3
+    - util-linux
   loop_control:
-    loop_var: package_name
+    loop_var: item
 
 - name: Install required pip packages
   ansible.builtin.pip:

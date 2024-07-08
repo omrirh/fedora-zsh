@@ -38,11 +38,16 @@
     - { repo: 'https://github.com/zsh-users/zsh-autosuggestions', name: 'zsh-autosuggestions' }
     - { repo: 'https://github.com/zsh-users/zsh-syntax-highlighting.git', name: 'zsh-syntax-highlighting' }
 
-- name: Download fonts for powerlevel10k
+- name: Ensure the destination directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/share/fonts/"
+    state: directory
+    mode: '0755'
+
+- name: Copy fonts for powerlevel10k
   ansible.builtin.copy:
     src: files/fonts/
     dest: "{{ ansible_env.HOME }}/.local/share/fonts/"
-  become: true
 
 - name: Apply fonts
   ansible.builtin.shell: sudo fc-cache -v

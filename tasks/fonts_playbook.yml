@@ -1,3 +1,4 @@
+---
 - name: Clone Nerd Fonts
   ansible.builtin.git:
     repo: https://github.com/ryanoasis/nerd-fonts.git
@@ -5,8 +6,9 @@
     depth: 1
 
 - name: Install fonts
-  ansible.builtin.shell: ./install.sh
-  chdir: chdir=/tmp/nerd-fonts
+  ansible.builtin.shell:
+    cmd: ./install.sh
+    chdir: /tmp/nerd-fonts
 
 - name: Update fonts cache
   ansible.builtin.shell: fc-cache -v

@@ -8,6 +8,7 @@
 
     - name: Install and update fonts
       ansible.builtin.include_tasks: tasks/fonts_playbook.yml
+
     - name: Configure zsh
       ansible.builtin.include_tasks: tasks/zsh_playbook.yml
 
