@@ -1,0 +1,14 @@
+---
+# Uses the MesloLGS NF fonts shipped in files/fonts/ (what powerlevel10k needs).
+# Does not clone the multi-GB nerd-fonts repo like tasks/fonts_playbook.yml.
+
+- name: Copy powerlevel10k fonts
+  ansible.builtin.copy:
+    src: files/fonts/
+    dest: "{{ home }}/.local/share/fonts/"
+    mode: "0644"
+  register: fonts_copied
+
+- name: Refresh font cache
+  ansible.builtin.command: fc-cache -f
+  when: fonts_copied.changed

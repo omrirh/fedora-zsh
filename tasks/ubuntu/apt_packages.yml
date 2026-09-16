@@ -1,0 +1,45 @@
+---
+- name: Update apt cache
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install base packages
+  become: true
+  ansible.builtin.apt:
+    state: present
+    name:
+      # shell / editors
+      - zsh
+      - vim
+      - neovim
+      - fontconfig
+      # vcs
+      - git
+      - git-crypt
+      # download / archive
+      - curl
+      - wget
+      - unzip
+      - tar
+      - ca-certificates
+      - gnupg
+      - apt-transport-https
+      - python3-debian          # required by deb822_repository
+      # build
+      - make
+      - openjdk-17-jdk          # ods/jenkins build.gradle enforces JDK 17
+      - maven
+      # data
+      - jq
+      # python
+      - python3-pip
+      - python3-venv
+      - pipx
+      # containers (local Jenkins via `make ENGINE=podman start`)
+      - podman
+      - skopeo
+      - buildah
+      # automation
+      - ansible

@@ -1,0 +1,42 @@
+---
+# oc + kubectl come from one tarball on mirror.openshift.com (stable channel).
+# tasks/openshift_packages_playbook.yml pins 4.13.0 and saves the tarball as
+# "kubectl"; this version follows `stable` and extracts both binaries.
+
+- name: Download openshift-client (oc + kubectl)
+  ansible.builtin.get_url:
+    url: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/openshift-client-linux.tar.gz
+    dest: /tmp/openshift-client-linux.tar.gz
+    mode: "0644"
+  when: not (local_bin + '/oc') is file
+
+- name: Extract oc and kubectl
+  ansible.builtin.unarchive:
+    src: /tmp/openshift-client-linux.tar.gz
+    dest: "{{ local_bin }}"
+    remote_src: true
+    include: [oc, kubectl]
+    creates: "{{ local_bin }}/oc"
+
+- name: Download rosa
+  ansible.builtin.get_url:
+    url: https://mirror.openshift.com/pub/openshift-v4/clients/rosa/latest/rosa-linux.tar.gz
+    dest: /tmp/rosa-linux.tar.gz
+    mode: "0644"
+  when: not (local_bin + '/rosa') is file
+
+- name: Extract rosa
+  ansible.builtin.unarchive:
+    src: /tmp/rosa-linux.tar.gz
+    dest: "{{ local_bin }}"
+    remote_src: true
+    include: [rosa]
+    creates: "{{ local_bin }}/rosa"
+
+- name: Remove downloaded tarballs
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/openshift-client-linux.tar.gz
+    - /tmp/rosa-linux.tar.gz

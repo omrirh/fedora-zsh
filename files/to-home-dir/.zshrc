@@ -164,9 +164,15 @@ GIT_EDITOR=$EDITOR
 
 # Aliases
 alias glog="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --date=relative"
-alias dnfi="sudo dnf install"
-alias dnfs="dnf search"
-alias dnfu="sudo dnf update"
+if command -v dnf >/dev/null 2>&1; then
+    alias dnfi="sudo dnf install"
+    alias dnfs="dnf search"
+    alias dnfu="sudo dnf update"
+elif command -v apt >/dev/null 2>&1; then
+    alias apti="sudo apt install"
+    alias apts="apt search"
+    alias aptu="sudo apt update && sudo apt upgrade"
+fi
 alias pip=pip3
 alias vi=vim
 alias vim=nvim
@@ -194,6 +200,27 @@ alias sshx="ssh -X"
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
 # For a full list of active aliases, run `alias`.
+
+# ── RHOAI QE toolchain ─────────────────────────────────────────────────
+# Local Jenkins (ods/jenkins local.sh) runs on podman; docker CLI maps to it.
+export ENGINE=podman
+command -v docker >/dev/null 2>&1 || alias docker=podman
+
+# gcloud completion (apt install puts it here)
+[[ -f /usr/share/google-cloud-sdk/completion.zsh.inc ]] && source /usr/share/google-cloud-sdk/completion.zsh.inc
+
+# ── Auth prerequisites ─────────────────────────────────────────────────
+# Declarations only. This file is committed to a public repo — NEVER put
+# values here. Real values go in ~/.env (untracked, chmod 600), sourced below.
+export GITLAB_HOST=""
+export GITLAB_TOKEN=""
+export AZURE_TENANT_ID=""
+export AZURE_CLIENT_ID=""
+export AZURE_CLIENT_SECRET=""
+export AZURE_SUBSCRIPTION_ID=""
+export DEV_PASSWORD=""          # local Jenkins `dev` user password
+
+[[ -f ~/.env ]] && source ~/.env
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh

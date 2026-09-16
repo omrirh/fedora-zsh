@@ -1,0 +1,61 @@
+---
+# Git identity + work repos. Clones default branch only (single_branch) —
+# feature branches are not migrated. Skips cloning if no SSH key is present
+# so the rest of the playbook still completes on a fresh VM.
+
+- name: Set git identity
+  ansible.builtin.command:
+    cmd: git config --global {{ item.key }} "{{ item.value }}"
+  loop:
+    - { key: user.name, value: "{{ git_user_name }}" }
+    - { key: user.email, value: "{{ git_user_email }}" }
+    - { key: init.defaultBranch, value: main }
+    - { key: pull.ff, value: only }
+  changed_when: false
+
+- name: Look for an SSH key
+  ansible.builtin.find:
+    paths: "{{ home }}/.ssh"
+    patterns: ["id_ed25519", "id_rsa", "id_ecdsa"]
+  register: ssh_keys
+
+- name: Warn when no SSH key is present
+  ansible.builtin.debug:
+    msg: >-
+      No SSH key found in ~/.ssh — skipping repo clones.
+      Add a key registered on gitlab.cee.redhat.com and rerun with --tags repos.
+  when: ssh_keys.matched == 0
+
+- name: Clone work repos (default branch only)
+  ansible.builtin.git:
+    repo: "{{ item.repo }}"
+    dest: "{{ home }}/{{ item.name }}"
+    version: "{{ item.branch }}"
+    single_branch: true
+    accept_newhostkey: true
+  loop: "{{ work_repos }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: ssh_keys.matched > 0
+
+- name: Check for existing upstream remote
+  ansible.builtin.command:
+    cmd: git -C {{ home }}/{{ item.name }} remote get-url upstream
+  loop: "{{ work_repos }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: upstream_check
+  failed_when: false
+  changed_when: false
+  when: ssh_keys.matched > 0
+
+- name: Add upstream remote
+  ansible.builtin.command:
+    cmd: git -C {{ home }}/{{ item.item.name }} remote add upstream {{ item.item.upstream }}
+  loop: "{{ upstream_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - ssh_keys.matched > 0
+    - item.rc is defined
+    - item.rc != 0

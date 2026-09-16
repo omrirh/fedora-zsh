@@ -1,0 +1,126 @@
+---
+# Cloud + dev CLIs. Vendor apt repos are added with signed keyrings via
+# deb822_repository rather than `curl | bash` installer scripts.
+# Binary releases (yq, uv) are pinned in ubuntu-zsh.yml vars.
+
+# ── yq ────────────────────────────────────────────────────────────────
+- name: Install yq
+  ansible.builtin.get_url:
+    url: "https://github.com/mikefarah/yq/releases/download/v{{ yq_version }}/yq_linux_amd64"
+    dest: "{{ local_bin }}/yq"
+    mode: "0755"
+
+# ── uv (python toolchain manager) ─────────────────────────────────────
+- name: Download uv release
+  ansible.builtin.get_url:
+    url: "https://github.com/astral-sh/uv/releases/download/{{ uv_version }}/uv-x86_64-unknown-linux-gnu.tar.gz"
+    dest: /tmp/uv.tar.gz
+    mode: "0644"
+  when: not (local_bin + '/uv') is file
+
+- name: Extract uv and uvx
+  ansible.builtin.unarchive:
+    src: /tmp/uv.tar.gz
+    dest: "{{ local_bin }}"
+    remote_src: true
+    extra_opts: [--strip-components=1]
+    creates: "{{ local_bin }}/uv"
+
+- name: Remove uv tarball
+  ansible.builtin.file:
+    path: /tmp/uv.tar.gz
+    state: absent
+
+# ── Google Cloud CLI ──────────────────────────────────────────────────
+- name: Add Google Cloud apt repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: google-cloud-sdk
+    types: [deb]
+    uris: https://packages.cloud.google.com/apt
+    suites: [cloud-sdk]
+    components: [main]
+    signed_by: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+  register: gcloud_repo
+
+# ── Azure CLI ─────────────────────────────────────────────────────────
+- name: Add Microsoft Azure CLI apt repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: azure-cli
+    types: [deb]
+    uris: https://packages.microsoft.com/repos/azure-cli/
+    suites: ["{{ ansible_distribution_release }}"]
+    components: [main]
+    architectures: [amd64]
+    signed_by: https://packages.microsoft.com/keys/microsoft.asc
+    state: present
+  register: azure_repo
+
+# ── Node.js (required by Claude Code) ─────────────────────────────────
+- name: Add NodeSource apt repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: nodesource
+    types: [deb]
+    uris: "https://deb.nodesource.com/node_{{ node_major }}.x"
+    suites: [nodistro]
+    components: [main]
+    signed_by: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+    state: present
+  register: node_repo
+
+- name: Update apt cache after adding repositories
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+  when: gcloud_repo.changed or azure_repo.changed or node_repo.changed
+
+- name: Install gcloud, az and nodejs
+  become: true
+  ansible.builtin.apt:
+    state: present
+    name:
+      - google-cloud-cli
+      - google-cloud-cli-gke-gcloud-auth-plugin
+      - azure-cli
+      - nodejs
+
+# ── AWS CLI v2 ────────────────────────────────────────────────────────
+- name: Download AWS CLI v2 installer
+  ansible.builtin.get_url:
+    url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+    dest: /tmp/awscliv2.zip
+    mode: "0644"
+  when: not '/usr/local/bin/aws' is file
+
+- name: Extract AWS CLI v2 installer
+  ansible.builtin.unarchive:
+    src: /tmp/awscliv2.zip
+    dest: /tmp
+    remote_src: true
+    creates: /tmp/aws/install
+  when: not '/usr/local/bin/aws' is file
+
+- name: Install AWS CLI v2
+  become: true
+  ansible.builtin.command:
+    cmd: /tmp/aws/install
+    creates: /usr/local/bin/aws
+
+- name: Remove AWS CLI installer files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/awscliv2.zip
+    - /tmp/aws
+
+# ── Claude Code ───────────────────────────────────────────────────────
+- name: Install Claude Code
+  become: true
+  community.general.npm:
+    name: "@anthropic-ai/claude-code"
+    global: true
+    state: present
