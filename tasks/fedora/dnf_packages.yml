@@ -1,0 +1,58 @@
+---
+# Fedora repos carry most of the toolchain (incl. yq, uv, awscli2, azure-cli),
+# so only JDK 17 needs a vendor repo here.
+
+- name: Add Adoptium (Temurin JDK) repository
+  become: true
+  ansible.builtin.yum_repository:
+    name: adoptium
+    description: Adoptium
+    baseurl: https://packages.adoptium.net/artifactory/rpm/fedora/$releasever/$basearch
+    gpgkey: https://packages.adoptium.net/artifactory/api/gpg/key/public
+    gpgcheck: true
+
+- name: Install base packages
+  become: true
+  ansible.builtin.dnf:
+    state: present
+    name:
+      # shell / editors
+      - zsh
+      - vim-enhanced
+      - neovim
+      - tmux
+      # modern CLI tools used by .zshrc (fzf-tab previews, fzf, zoxide, eza)
+      - fzf
+      - ripgrep
+      - fd-find
+      - bat
+      - eza
+      - zoxide
+      - git-delta
+      - btop
+      # vcs
+      - git
+      - git-crypt
+      - gh
+      # download / archive
+      - curl
+      - wget
+      - unzip
+      - tar
+      # build (gcc + tree-sitter-cli are needed by LazyVim's treesitter)
+      - make
+      - gcc
+      - tree-sitter-cli
+      - "temurin-{{ jdk_version }}-jdk"
+      - maven
+      # data
+      - jq
+      - yq
+      # python
+      - python3-pip
+      - pipx
+      - uv
+      # containers (local Jenkins via `make ENGINE=podman start`)
+      - podman
+      - skopeo
+      - buildah

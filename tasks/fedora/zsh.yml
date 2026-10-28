@@ -1,0 +1,61 @@
+---
+# Same flow as tasks/ubuntu/zsh.yml, plus the plugins files/fedora/.zshrc loads
+# (zsh-completions, fzf-tab, you-should-use).
+
+- name: Set zsh as default shell
+  become: true
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    shell: /usr/bin/zsh
+
+- name: Download oh-my-zsh install script
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+    dest: /tmp/oh-my-zsh-install.sh
+    mode: "0755"
+  when: not (home + '/.oh-my-zsh') is directory
+
+- name: Install oh-my-zsh (unattended, as current user)
+  ansible.builtin.command:
+    cmd: sh /tmp/oh-my-zsh-install.sh --unattended --keep-zshrc
+    creates: "{{ home }}/.oh-my-zsh"
+
+- name: Remove oh-my-zsh install script
+  ansible.builtin.file:
+    path: /tmp/oh-my-zsh-install.sh
+    state: absent
+
+- name: Copy .zshrc and .p10k.zsh to home
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ home }}/"
+    mode: "0644"
+    backup: true
+  loop:
+    - files/fedora/.zshrc
+    - files/to-home-dir/.p10k.zsh
+
+- name: Clone zsh plugins
+  ansible.builtin.git:
+    repo: "{{ item.repo }}"
+    dest: "{{ home }}/.oh-my-zsh/custom/plugins/{{ item.name }}"
+    depth: 1
+  loop:
+    - { repo: "https://github.com/TamCore/autoupdate-oh-my-zsh-plugins", name: autoupdate }
+    - { repo: "https://github.com/zsh-users/zsh-autosuggestions", name: zsh-autosuggestions }
+    - { repo: "https://github.com/zsh-users/zsh-syntax-highlighting.git", name: zsh-syntax-highlighting }
+    - { repo: "https://github.com/zsh-users/zsh-completions", name: zsh-completions }
+    - { repo: "https://github.com/Aloxaf/fzf-tab", name: fzf-tab }
+    - { repo: "https://github.com/MichaelAquilina/zsh-you-should-use", name: you-should-use }
+
+- name: Clone powerlevel10k theme
+  ansible.builtin.git:
+    repo: https://github.com/romkatv/powerlevel10k.git
+    dest: "{{ home }}/.oh-my-zsh/custom/themes/powerlevel10k"
+    depth: 1
+
+- name: Install bash-insulter
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/hkbakke/bash-insulter/master/src/bash.command-not-found
+    dest: "{{ local_bin }}/bash.command-not-found"
+    mode: "0755"

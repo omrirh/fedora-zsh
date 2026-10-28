@@ -81,7 +81,7 @@
 
     - name: Install OpenShift CLIs
       ansible.builtin.include_tasks:
-        file: tasks/ubuntu/openshift_clis.yml
+        file: tasks/common/openshift_clis.yml
         apply:
           tags: [cli]
       tags: [cli]
@@ -95,7 +95,7 @@
 
     - name: Configure git and clone work repos
       ansible.builtin.include_tasks:
-        file: tasks/ubuntu/repos.yml
+        file: tasks/common/repos.yml
         apply:
           tags: [repos]
       tags: [repos]

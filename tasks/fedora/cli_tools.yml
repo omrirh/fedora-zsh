@@ -1,0 +1,64 @@
+---
+# Cloud + dev CLIs. aws, az and Node.js come from Fedora repos; gcloud from
+# Google's el9 repo (what Google documents for Fedora). Claude Code uses the
+# native installer, downloaded to a file first so what runs is inspectable.
+
+# ── Fedora-packaged CLIs ──────────────────────────────────────────────
+- name: Install aws, az and nodejs
+  become: true
+  ansible.builtin.dnf:
+    state: present
+    name:
+      - awscli2
+      - azure-cli
+      - nodejs
+      - npm
+
+# ── Google Cloud CLI ──────────────────────────────────────────────────
+- name: Add Google Cloud repository
+  become: true
+  ansible.builtin.yum_repository:
+    name: google-cloud-cli
+    description: Google Cloud CLI
+    baseurl: https://packages.cloud.google.com/yum/repos/cloud-sdk-el9-x86_64
+    gpgkey: https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    gpgcheck: true
+    repo_gpgcheck: false
+
+- name: Install gcloud
+  become: true
+  ansible.builtin.dnf:
+    state: present
+    name:
+      - libxcrypt-compat
+      - google-cloud-cli
+      - google-cloud-cli-gke-gcloud-auth-plugin
+
+# ── git: delta as pager ───────────────────────────────────────────────
+- name: Use delta for git diffs
+  ansible.builtin.command:
+    cmd: git config --global {{ item.key }} "{{ item.value }}"
+  loop:
+    - { key: core.pager, value: delta }
+    - { key: interactive.diffFilter, value: delta --color-only }
+    - { key: delta.navigate, value: "true" }
+    - { key: merge.conflictStyle, value: zdiff3 }
+  changed_when: false
+
+# ── Claude Code ───────────────────────────────────────────────────────
+- name: Download Claude Code installer
+  ansible.builtin.get_url:
+    url: https://claude.ai/install.sh
+    dest: /tmp/claude-install.sh
+    mode: "0755"
+  when: not (local_bin + '/claude') is file
+
+- name: Install Claude Code (as current user, into ~/.local/bin)
+  ansible.builtin.command:
+    cmd: bash /tmp/claude-install.sh
+    creates: "{{ local_bin }}/claude"
+
+- name: Remove Claude Code installer
+  ansible.builtin.file:
+    path: /tmp/claude-install.sh
+    state: absent

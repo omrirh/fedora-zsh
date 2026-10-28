@@ -1,0 +1,94 @@
+---
+# Fedora counterpart of ubuntu-zsh.yml, meant to run on a fresh Fedora VM
+# (tested on Fedora 44 on OpenShift Virtualization). Sets up zsh + powerlevel10k
+# with modern plugins (fzf-tab, zoxide, eza, bat, ...), LazyVim, the RHOAI QE
+# CLI toolchain and Claude Code, then clones the work repos (master/main only).
+#
+#   ansible-playbook -K fedora-vm.yml
+#   ansible-playbook -K fedora-vm.yml --tags cli        # just the CLIs
+#   ansible-playbook -K fedora-vm.yml --skip-tags repos # no GitLab access yet
+#
+# Override identity / versions with -e, e.g.:
+#   ansible-playbook -K fedora-vm.yml -e git_user_email=you@example.com
+
+- name: Fedora zsh + RHOAI QE toolchain
+  hosts: localhost
+  connection: local
+  gather_facts: true
+
+  vars:
+    home: "{{ ansible_env.HOME }}"
+    local_bin: "{{ ansible_env.HOME }}/.local/bin"
+
+    git_user_name: "Omri Bar Haim"
+    git_user_email: "obarhaim@redhat.com"
+
+    # ods/jenkins build.gradle enforces JDK 17; Fedora 44 only ships 25+,
+    # so it comes from the Adoptium (Temurin) repo
+    jdk_version: "17"
+
+    # Work repos: default branch only, no feature branches carried over
+    work_repos:
+      - name: jenkins
+        repo: git@gitlab.cee.redhat.com:obarhaim/jenkins.git
+        branch: master
+        upstream: git@gitlab.cee.redhat.com:ods/jenkins.git
+      - name: rhods-qe-tools
+        repo: git@gitlab.cee.redhat.com:obarhaim/rhods-qe-tools.git
+        branch: main
+        upstream: git@gitlab.cee.redhat.com:ods/rhods-qe-tools.git
+
+  pre_tasks:
+    - name: Refuse to run on non-Fedora systems
+      ansible.builtin.assert:
+        that: ansible_distribution == 'Fedora'
+        fail_msg: "fedora-vm.yml targets Fedora. Use ubuntu-zsh.yml on Debian/Ubuntu."
+
+    - name: Ensure ~/.local/bin exists
+      ansible.builtin.file:
+        path: "{{ local_bin }}"
+        state: directory
+        mode: "0755"
+
+  tasks:
+    - name: Install dnf packages
+      ansible.builtin.include_tasks:
+        file: tasks/fedora/dnf_packages.yml
+        apply:
+          tags: [packages]
+      tags: [packages, always]
+
+    - name: Configure zsh, oh-my-zsh and powerlevel10k
+      ansible.builtin.include_tasks:
+        file: tasks/fedora/zsh.yml
+        apply:
+          tags: [zsh]
+      tags: [zsh]
+
+    - name: Install and configure LazyVim
+      ansible.builtin.include_tasks:
+        file: tasks/lazyvim_playbook.yml
+        apply:
+          tags: [nvim]
+      tags: [nvim]
+
+    - name: Install OpenShift CLIs
+      ansible.builtin.include_tasks:
+        file: tasks/common/openshift_clis.yml
+        apply:
+          tags: [cli]
+      tags: [cli]
+
+    - name: Install cloud and dev CLIs
+      ansible.builtin.include_tasks:
+        file: tasks/fedora/cli_tools.yml
+        apply:
+          tags: [cli]
+      tags: [cli]
+
+    - name: Configure git and clone work repos
+      ansible.builtin.include_tasks:
+        file: tasks/common/repos.yml
+        apply:
+          tags: [repos]
+      tags: [repos]
